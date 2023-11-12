@@ -40,8 +40,8 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    let (year, day) = convert_day_to_url(args.day).unwrap();
-    println!("WARNING: this will overwrite README.md file in current directory, hopefully a `git restore` will save you.");
+    let (year, day) = convert_day_to_url(args.day)?;
+    println!("WARNING: this will overwrite README.md file in current directory, hopefully a `git restore README.md` will save you.");
 
 
     let base_url = format!("https://adventofcode.com/{}/day/{}", year, day);
@@ -66,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let document = Html::parse_document(&body);
 
     let mut markdown_buffer = String::new();
-    let article_selector = Selector::parse("article").unwrap();
+    let article_selector = Selector::parse("article")?;
 
     println!("Converting to markdown");
     for article in document.select(&article_selector) {
@@ -93,15 +93,15 @@ fn convert_day_to_url(day: String) -> Result<(String, String), ParseDayError> {
     
         return Ok(((year - 1).to_string(), last_day));
     }
-    if day.len() != 6 || day.len() != 7 {
-        return Err(ParseDayError::new("Invalid day format, expect length to be 6 or 7 characters, ex 2020/1 or 2015/25"));
+    if !(day.len() == 6 || day.len() == 7) {
+        return Err(ParseDayError::new(format!("Invalid day format: {}, expect length to be 6 or 7 characters, ex 2020/1 or 2015/25", day).as_str()));
     }
     match day.split_once("/") {
         Some((year, day)) => {
             if year.len() != 4 {
                 return Err(ParseDayError::new("Invalid year, expect length to be 4 characters, ex 2020"));
             }
-            if day.len() != 1 || day.len() != 2 {
+            if !(day.len() == 1 || day.len() == 2) {
                 return Err(ParseDayError::new("Invalid day, expect length to be 1 or 2 characters, ex 1 or 25"));
             }
             return Ok((year.to_string(), day.to_string()));
