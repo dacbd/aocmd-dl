@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         None => {
             println!("No token provided, only public puzzles (part 1) will be available");
-            println!("See link to get your token:");
+            println!("How to get your token: https://github.com/dacbd/aocmd-dl#get-your-token");
         }
     }
 
