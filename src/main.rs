@@ -1,8 +1,9 @@
 
-use std::{option::Option};
+use std::option::Option;
 
 use clap::Parser;
 use chrono::{Utc, FixedOffset, Datelike};
+use scraper::{Html, Selector};
 
 
 #[derive(Debug)]
@@ -40,23 +41,40 @@ struct Args {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let (year, day) = convert_day_to_url(args.day).unwrap();
+    println!("WARNING: this will overwrite README.md file in current directory, hopefully a `git restore` will save you.");
 
 
     let base_url = format!("https://adventofcode.com/{}/day/{}", year, day);
     let client = reqwest::Client::new();
-    let mut request_builder = client.get(base_url);
+    let mut request_builder = client.get(base_url.clone())
+        .header("User-Agent", "https://github.com/dacbd/aocmd-dl");
     match args.token {
         Some(token) => {
-            println!("token: {}", token);
             request_builder = request_builder.header("Cookie", format!("session={}", token));
         },
-        None => {}
+        None => {
+            println!("No token provided, only public puzzles (part 1) will be available");
+            println!("See link to get your token:");
+        }
     }
 
     let request = request_builder.build()?;
+    println!("Loading puzzle from {}", base_url);
     let response = client.execute(request).await?;
     let body = response.text().await?;
-    println!("body: {}", body);
+    println!("Parsing document");
+    let document = Html::parse_document(&body);
+
+    let mut markdown_buffer = String::new();
+    let article_selector = Selector::parse("article").unwrap();
+
+    println!("Converting to markdown");
+    for article in document.select(&article_selector) {
+        markdown_buffer.push_str(html2md::parse_html(article.inner_html().as_str()).as_str() );
+        markdown_buffer.push_str("\n\n\n");
+    }
+    println!("Writing to README.md");
+    std::fs::write("README.md", markdown_buffer)?;
     Ok(())
 }
 

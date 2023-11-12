@@ -8,5 +8,7 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.31"
 clap = { version = "4.4.8", features = ["derive"] }
+html2md = "0.2.14"
 reqwest = { version = "0.11.22", features = ["rustls"] }
+scraper = "0.18.1"
 tokio = { version = "1.34.0", features = ["full"] }
