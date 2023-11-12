@@ -19,7 +19,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag: ${{ github.ref }}
+        tag: ${{ github.ref_name }}
         draft: true
     outputs:
       release_id: ${{ steps.create_release.outputs.release_id }}
