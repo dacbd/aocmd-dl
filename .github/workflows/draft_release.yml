@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  draft-release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build project
+      run: cargo build --release
+
+    - name: Create Release
+      id: create_release
+      uses: ncipollo/release-action@v1.13.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag: ${{ github.ref }}
+        draft: true
+    outputs:
+      release_id: ${{ steps.create_release.outputs.release_id }}
+
+  upload-release-assets:
+    needs: draft-release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64-unknown-linux-gnu, x86_64-apple-darwin, x86_64-pc-windows-gnu, aarch64-unknown-linux-gnu, aarch64-apple-darwin]
+    steps:
+    - uses: actions/checkout@v3
+    - run: rustup target add ${{ matrix.target }}
+    - run: cargo build --release --target ${{ matrix.target }}
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+        target: ${{ matrix.target }}
+    - name: Build
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --target ${{ matrix.target }}
+    - name: Upload Release Asset
+      id: upload_release_asset
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh api \
+          --method POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          /repos/${{ github.repository }}/releases/${{ job.draft-release.outputs.release_id}}/assets?name=aocmd-dl_${{ matrix.target }} \
+          -f '@target/${{ matrix.target }}/aocmd-dl'
