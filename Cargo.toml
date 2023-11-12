@@ -2,6 +2,14 @@
 name = "aocmd-dl"
 version = "0.1.0"
 edition = "2021"
+authors = ["Daniel Barnes"]
+license = "MIT"
+description = "A command line tool for downloading Advent of Code puzzle text as Markdown."
+readme = "README.md"
+repository = "https://github.com/dacbd/aocmd-dl"
+homepage = "https://github.com/dacbd/aocmd-dl"
+keywords = ["cli", "AoC", "html-to-markdown", "advent-of-code"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
